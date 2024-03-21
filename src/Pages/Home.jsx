@@ -1,64 +1,60 @@
-// Home.js
-
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
-import { addInputData, deleteInputData } from '../Redux/Slices/action';
+import { useDispatch, useSelector } from 'react-redux';
+import { addTodo, deleteTodo, toggleComplete } from '../Redux/Slices/todoSlice';
 
-function Home({ inputDataList, addInputData, deleteInputData }) {
-  const [inputData, setInputData] = useState('');
-  const [checkedItems, setCheckedItems] = useState({});
+function Home() {
+  const [inputValue, setInputValue] = useState('');
+  const dispatch = useDispatch();
+  const todos = useSelector(state => state.todos);
 
-  const handleAdd = () => {
-    if (inputData.trim() !== '') {
-      addInputData(inputData);
-      setInputData('');
+  const handleInputChange = e => {
+    setInputValue(e.target.value);
+  };
+
+  const handleAddTodo = () => {
+    if (inputValue.trim() !== '') {
+      dispatch(
+        addTodo({
+          id: Date.now(),
+          text: inputValue,
+          completed: false,
+        })
+      );
+      setInputValue('');
     }
   };
 
-  const handleDelete = (index) => {
-    deleteInputData(index);
+  const handleToggleComplete = id => {
+    dispatch(toggleComplete(id));
   };
 
-  const handleCheckboxChange = (index) => {
-    setCheckedItems({ ...checkedItems, [index]: !checkedItems[index] });
+  const handleDeleteTodo = id => {
+    dispatch(deleteTodo(id));
   };
+
+  const completedTodosCount = todos.filter(todo => todo.completed).length;
 
   return (
-    <div className="container">
-      <h1>Todo List</h1>
-      <div className='d-flex'>
-        <input type="text" value={inputData} onChange={(e) => setInputData(e.target.value)} className='form-control w-50' />
-        <button className='btn btn-info' onClick={handleAdd}>Add</button>
-      </div>
-      <div className="container mt-5">
-        {inputDataList.map((data, index) => (
-          <div key={index} className="card" style={{ backgroundColor: checkedItems[index] ? 'lightgreen' : 'white' }}>
-            <div className="d-flex justify-content-between mb-3 align-items-center p-1">
-              <div>
-                <input type="checkbox" name="" id="" checked={checkedItems[index]} onChange={() => handleCheckboxChange(index)} />
-                <h4>{data}</h4>
-              </div>
-              <button className='btn btn-danger' onClick={() => handleDelete(index)}>Delete</button>
+    <div>
+      <h1 style={{ margin: '30px' }} className='text-bold'>TODO APP</h1>
+      <input style={{ margin: '10px', borderRadius: '5px', width: '250px' }} type="text" value={inputValue} onChange={handleInputChange} />
+      <button className='btn btn-primary' onClick={handleAddTodo}>Add Todo</button>
+      <p>Completed Todos: {completedTodosCount}</p>
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id} className='d-flex justify-content-between' style={{backgroundColor: todo.completed ? 'lightgreen' : 'white'}}>
+            <div>
+              <input type="checkbox" checked={todo.completed} onChange={() => handleToggleComplete(todo.id)} />
+              <span style={{ textDecoration: todo.completed ? 'none' : 'none' }}>
+                {todo.text}
+              </span>
             </div>
-          </div>
+            <button className='btn btn-info ms-1' onClick={() => handleDeleteTodo(todo.id)}>Delete</button>
+          </li>
         ))}
-      </div>
-      <div className="container">
-        <h4>Total Complete Items: {Object.values(checkedItems).filter(item => item).length}</h4>
-      </div>
+      </ul>
     </div>
   );
 }
 
-const mapStateToProps = (state) => {
-  return {
-    inputDataList: state.inputDataList
-  };
-};
-
-const mapDispatchToProps = {
-  addInputData,
-  deleteInputData
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Home);
+export default Home;
